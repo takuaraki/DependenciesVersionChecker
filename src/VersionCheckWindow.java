@@ -30,7 +30,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
     private JPanel toowWindowContent;
     private JButton versionCheckButton;
     private JTextArea inputArea;
-    private JEditorPane editorPane1;
+    private JEditorPane resultArea;
 
     public VersionCheckWindow() {
         versionCheckButton.addActionListener(new ActionListener() {
@@ -54,7 +54,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
                                     .append("</tr>");
                         }
                         stringBuilder.append("</table>");
-                        editorPane1.setText(stringBuilder.toString());
+                        resultArea.setText(stringBuilder.toString());
 
                         Notifications.Bus.notify(new Notification("versionCheckStart", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
                     }
@@ -62,7 +62,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
             }
         });
 
-        editorPane1.addHyperlinkListener(new HyperlinkAdapter() {
+        resultArea.addHyperlinkListener(new HyperlinkAdapter() {
             @Override
             protected void hyperlinkActivated(HyperlinkEvent hyperlinkEvent) {
                 if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
@@ -85,12 +85,18 @@ public class VersionCheckWindow implements ToolWindowFactory {
         toolWindow.getContentManager().addContent(content);
     }
 
+    /**
+     * 最新のライブラリバーションを取得する
+     *
+     * @param metaDataUrls メタデータ取得用のURLリスト
+     * @return
+     */
     private List<String> getLatestVersions(List<String> metaDataUrls) {
         int urlNum = metaDataUrls.size();
         List<String> latestVersions = new ArrayList<String>();
 
         for (int i = 0; i < urlNum; i++) {
-            editorPane1.setText("<b>Getting latest versions (" + (i+1) + "/" + urlNum + ")</b>");
+            resultArea.setText("<b>Getting latest versions (" + (i+1) + "/" + urlNum + ")</b>");
             try {
                 XmlParser xmlParser = new XmlParser();
                 Node node = xmlParser.parse(metaDataUrls.get(i));
