@@ -17,15 +17,19 @@ import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by taku on 2016/01/09.
+ * バーションチェックを行うToolWindow
  */
 public class VersionCheckWindow implements ToolWindowFactory {
+
+    private static final String INPUT_AREA_HINT = "Input your 'build.gradle' script.";
 
     private JPanel toowWindowContent;
     private JButton versionCheckButton;
@@ -33,6 +37,23 @@ public class VersionCheckWindow implements ToolWindowFactory {
     private JEditorPane resultArea;
 
     public VersionCheckWindow() {
+        inputArea.setText(INPUT_AREA_HINT);
+        inputArea.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent focusEvent) {
+                if (inputArea.getText().equals(INPUT_AREA_HINT)) {
+                    inputArea.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent focusEvent) {
+                if (inputArea.getText().equals("")) {
+                    inputArea.setText(INPUT_AREA_HINT);
+                }
+            }
+        });
+
         versionCheckButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
