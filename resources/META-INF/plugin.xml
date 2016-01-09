@@ -25,8 +25,8 @@
     -->
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="VersionCheckToowWindow"
-                    icon="/myToolWindow/plus.png"
+        <toolWindow id="VersionChecker"
+                    icon="/toolwindow_version_check/icon.png"
                     anchor="bottom"
                     factoryClass="VersionCheckWindow"/>
     </extensions>
