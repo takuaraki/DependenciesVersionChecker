@@ -30,6 +30,7 @@ import java.util.List;
 public class VersionCheckWindow implements ToolWindowFactory {
 
     private static final String INPUT_AREA_HINT = "Input your 'build.gradle' script.";
+    private static final String ERROR_MESSAGE_NO_LIBRARY = "<span style=\"color:red\">[Error] No library declaration is found. Please input gradle script which contains dependencies blocks.</span>";
 
     private JPanel toowWindowContent;
     private JButton versionCheckButton;
@@ -58,7 +59,13 @@ public class VersionCheckWindow implements ToolWindowFactory {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 String gradleScript = inputArea.getText();
+
                 final List<String> libraryDeclarationTexts = GradleScriptParsingUtils.extractLibraryDeclarationTexts(gradleScript);
+                if (libraryDeclarationTexts.size() == 0) {
+                    resultArea.setText(ERROR_MESSAGE_NO_LIBRARY);
+                    return;
+                }
+
                 final List<String> metaDataUrls = GradleScriptParsingUtils.createMetaDataUrls(libraryDeclarationTexts);
 
                 new Thread(new Runnable() {
