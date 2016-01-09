@@ -1,17 +1,24 @@
 <idea-plugin version="2">
-    <id>com.your.company.unique.plugin.id</id>
-    <name>Plugin display name here</name>
+    <id>io.github.takuaraki.dvc</id>
+    <name>Dependencies Version Checker</name>
     <version>1.0</version>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <vendor email="takuaraki7@gmail.com" url="http://takuaraki.github.io/depencenciesVersionChecker/">Depencencies Version Checker</vendor>
 
     <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+      This plugin provides the bottom tool window which extract library declaration from your 'build.gradle' script.
     ]]></description>
 
     <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+      <table>
+        <tr>
+          <th>version</th>
+          <th>description</th>
+        </tr>
+        <tr>
+          <td>1.0</td>
+          <td>first release</td>
+        </tr>
+      </table>
     ]]>
     </change-notes>
 
