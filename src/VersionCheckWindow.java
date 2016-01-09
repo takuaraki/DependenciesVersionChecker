@@ -36,8 +36,6 @@ public class VersionCheckWindow implements ToolWindowFactory {
         versionCheckButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                Notifications.Bus.notify(new Notification("versionCheckStart", "Dependencies Version Checker", "Version check started.", NotificationType.INFORMATION));
-
                 String gradleScript = inputArea.getText();
                 final List<String> libraryDeclarationTexts = GradleScriptParsingUtils.extractLibraryDeclarationTexts(gradleScript);
                 final List<String> metaDataUrls = GradleScriptParsingUtils.createMetaDataUrls(libraryDeclarationTexts);
@@ -88,12 +86,14 @@ public class VersionCheckWindow implements ToolWindowFactory {
     }
 
     private List<String> getLatestVersions(List<String> metaDataUrls) {
+        int urlNum = metaDataUrls.size();
         List<String> latestVersions = new ArrayList<String>();
 
-        for (String metaDataUrl : metaDataUrls) {
+        for (int i = 0; i < urlNum; i++) {
+            editorPane1.setText("<b>Getting latest versions (" + (i+1) + "/" + urlNum + ")</b>");
             try {
                 XmlParser xmlParser = new XmlParser();
-                Node node = xmlParser.parse(metaDataUrl);
+                Node node = xmlParser.parse(metaDataUrls.get(i));
                 String latestVersion = node.getAt(QName.valueOf("versioning")).getAt("latest").text();
                 latestVersions.add(latestVersion);
             } catch (Exception e1) {
