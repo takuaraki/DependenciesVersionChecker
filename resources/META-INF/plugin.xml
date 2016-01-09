@@ -2,10 +2,10 @@
     <id>io.github.takuaraki.dvc</id>
     <name>Dependencies Version Checker</name>
     <version>1.0</version>
-    <vendor email="takuaraki7@gmail.com" url="http://takuaraki.github.io/depencenciesVersionChecker/">Depencencies Version Checker</vendor>
+    <vendor email="takuaraki7@gmail.com" url="http://github.com/takuaraki/DependenciesVersionChecker">Depencencies Version Checker</vendor>
 
     <description><![CDATA[
-      This plugin provides the bottom tool window which extract library declaration from your 'build.gradle' script.
+      This plugin provides the bottom tool window which extract library declaration from your 'build.gradle' script and show latest library versions searched in Maven Repository.
     ]]></description>
 
     <change-notes><![CDATA[
