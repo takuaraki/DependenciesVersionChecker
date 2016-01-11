@@ -1,5 +1,4 @@
 /build
 /.idea
-*.jar
 *.iml
 /.gradle
