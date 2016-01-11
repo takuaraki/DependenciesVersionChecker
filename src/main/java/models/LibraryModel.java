@@ -1,6 +1,12 @@
 package models;
 
 import entity.Library;
+import groovy.util.Node;
+import groovy.util.XmlParser;
+import groovy.xml.QName;
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.FuncN;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +39,43 @@ public class LibraryModel {
 
     public List<Library> getLibraries() {
         return libraries;
+    }
+
+    public Observable<List<GetLatestLibraryResult>> getLatestLibraries() {
+        List<Observable<GetLatestLibraryResult>> observables = new ArrayList<Observable<GetLatestLibraryResult>>();
+        for (Library library : libraries) {
+            observables.add(getLatestLibrary(library));
+        }
+
+        return Observable.zip(observables, new FuncN<List<GetLatestLibraryResult>>() {
+            @Override
+            public List<GetLatestLibraryResult> call(Object... args) {
+                List<GetLatestLibraryResult> latestVersions = new ArrayList<GetLatestLibraryResult>();
+                for (Object arg : args) {
+                    GetLatestLibraryResult latestVersion = (GetLatestLibraryResult) arg;
+                    latestVersions.add(latestVersion);
+                }
+                return latestVersions;
+            }
+        });
+    }
+
+    public Observable<GetLatestLibraryResult> getLatestLibrary(final Library library) {
+        return Observable.create(new Observable.OnSubscribe<GetLatestLibraryResult>() {
+            @Override
+            public void call(Subscriber<? super GetLatestLibraryResult> subscriber) {
+                try {
+                    XmlParser xmlParser = new XmlParser();
+                    Node node = xmlParser.parse(library.getMetaDataUrl());
+                    String latestVersion = node.getAt(QName.valueOf("versioning")).getAt("latest").text();
+                    subscriber.onNext(new GetLatestLibraryResult(library, latestVersion));
+                    subscriber.onCompleted();
+                } catch (Exception e) {
+                    subscriber.onNext(new GetLatestLibraryResult(library, "Not Found"));
+                    subscriber.onCompleted();
+                }
+            }
+        });
     }
 
     /**
@@ -74,5 +117,23 @@ public class LibraryModel {
                 .append(library.getArtifactId())
                 .append("/maven-metadata.xml")
                 .toString();
+    }
+
+    public static class GetLatestLibraryResult {
+        Library library;
+        String latestVersion;
+
+        public GetLatestLibraryResult(Library library, String latestVersion) {
+            this.library = library;
+            this.latestVersion = latestVersion;
+        }
+
+        public Library getLibrary() {
+            return library;
+        }
+
+        public String getLatestVersion() {
+            return latestVersion;
+        }
     }
 }

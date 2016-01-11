@@ -10,7 +10,12 @@ import com.intellij.ui.content.ContentFactory;
 import groovy.util.Node;
 import groovy.util.XmlParser;
 import groovy.xml.QName;
+import models.LibraryModel;
 import org.jetbrains.annotations.NotNull;
+import rx.Scheduler;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import viewmodels.VersionCheckViewModel;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -37,7 +42,11 @@ public class VersionCheckWindow implements ToolWindowFactory {
     private JTextArea inputArea;
     private JEditorPane resultArea;
 
+    VersionCheckViewModel versionCheckViewModel;
+
     public VersionCheckWindow() {
+        versionCheckViewModel = new VersionCheckViewModel();
+
         inputArea.setText(INPUT_AREA_HINT);
         inputArea.addFocusListener(new FocusListener() {
             @Override
@@ -58,35 +67,34 @@ public class VersionCheckWindow implements ToolWindowFactory {
         versionCheckButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                String gradleScript = inputArea.getText();
-
-                final List<String> libraryDeclarationTexts = GradleScriptParsingUtils.extractLibraryDeclarationTexts(gradleScript);
-                if (libraryDeclarationTexts.size() == 0) {
+                versionCheckViewModel.init(inputArea.getText());
+                if (versionCheckViewModel.getLibraries().size() == 0) {
                     resultArea.setText(ERROR_MESSAGE_NO_LIBRARY);
                     return;
                 }
 
-                final List<String> metaDataUrls = GradleScriptParsingUtils.createMetaDataUrls(libraryDeclarationTexts);
+                versionCheckViewModel
+                        .getLatestVersions()
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new Action1<List<LibraryModel.GetLatestLibraryResult>>() {
+                            @Override
+                            public void call(List<LibraryModel.GetLatestLibraryResult> results) {
+                                StringBuilder stringBuilder = new StringBuilder();
+                                stringBuilder.append("<table>")
+                                        .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
+                                for (LibraryModel.GetLatestLibraryResult result : results) {
+                                    stringBuilder
+                                            .append("<tr>")
+                                            .append("<td><a href=\"").append(result.getLibrary().getMetaDataUrl()).append("\">")
+                                            .append(result.getLibrary().getGroupId()).append(":").append(result.getLibrary().getArtifactId()).append("</a></td>")
+                                            .append("<td>").append(result.getLatestVersion()).append("</td>")
+                                            .append("</tr>");
+                                }
+                                resultArea.setText(stringBuilder.toString());
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        List<String> latestVersions = getLatestVersions(metaDataUrls);
-                        StringBuilder stringBuilder = new StringBuilder();
-                        stringBuilder.append("<table>")
-                                .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
-                        for (int i = 0; i < libraryDeclarationTexts.size(); i++) {
-                            stringBuilder
-                                    .append("<tr>")
-                                    .append("<td><a href=\"" + metaDataUrls.get(i) + "\">" + libraryDeclarationTexts.get(i) + "</a></td><td>" + latestVersions.get(i) + "</td>")
-                                    .append("</tr>");
-                        }
-                        stringBuilder.append("</table>");
-                        resultArea.setText(stringBuilder.toString());
-
-                        Notifications.Bus.notify(new Notification("versionCheckStart", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
-                    }
-                }).start();
+                                Notifications.Bus.notify(new Notification("versionCheckStart", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
+                            }
+                        });
             }
         });
 

@@ -2,6 +2,7 @@ package viewmodels;
 
 import entity.Library;
 import models.LibraryModel;
+import rx.Observable;
 
 import java.util.List;
 
@@ -27,5 +28,9 @@ public class VersionCheckViewModel {
 
     public List<Library> getLibraries() {
         return libraryModel.getLibraries();
+    }
+
+    public Observable<List<LibraryModel.GetLatestLibraryResult>> getLatestVersions() {
+        return libraryModel.getLatestLibraries();
     }
 }
