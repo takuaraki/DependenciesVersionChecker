@@ -27,7 +27,7 @@ public class VersionCheckViewModel {
     }
 
     public List<Library> getLibraries() {
-        return libraryModel.getLibraries();
+        return libraryModel.getUsingLibraries();
     }
 
     public Observable<LibraryModel.GetLatestLibrariesResult> getLatestVersions() {

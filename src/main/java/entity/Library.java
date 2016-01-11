@@ -6,14 +6,21 @@ package entity;
 public class Library {
     String groupId;
     String artifactId;
-    String currentUsingVersion;
+    String version;
     String metaDataUrl;
 
-    public Library(String groupId, String artifactId, String currentUsingVersion) {
+    public Library(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
-        this.currentUsingVersion = currentUsingVersion;
+        this.version = version;
         metaDataUrl = null;
+    }
+
+    public Library(Library library) {
+        this.groupId = library.getGroupId();
+        this.artifactId = library.getArtifactId();
+        this.version = library.getVersion();
+        this.metaDataUrl = library.getMetaDataUrl();
     }
 
     public String getGroupId() {
@@ -24,8 +31,12 @@ public class Library {
         return artifactId;
     }
 
-    public String getCurrentUsingVersion() {
-        return currentUsingVersion;
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public String getMetaDataUrl() {

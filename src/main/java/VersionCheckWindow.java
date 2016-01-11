@@ -7,9 +7,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.HyperlinkAdapter;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import groovy.util.Node;
-import groovy.util.XmlParser;
-import groovy.xml.QName;
+import entity.Library;
 import models.LibraryModel;
 import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;
@@ -25,8 +23,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * バーションチェックを行うToolWindow
@@ -86,7 +82,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
                                 StringBuilder stringBuilder = new StringBuilder();
                                 stringBuilder.append("<table>")
                                         .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
-                                for (LibraryModel.LatestLibrary library : getLatestLibrariesResult.getLatestLibraries()) {
+                                for (Library library : getLatestLibrariesResult.getLatestLibraries()) {
                                     stringBuilder
                                             .append("<tr>")
                                             .append("<td><a href=\"").append(library.getMetaDataUrl()).append("\">")

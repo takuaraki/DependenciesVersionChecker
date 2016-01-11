@@ -17,10 +17,10 @@ import java.util.regex.Pattern;
  */
 public class LibraryModel {
 
-    List<Library> libraries;
+    List<Library> usingLibraries;
 
     public LibraryModel() {
-        libraries = new ArrayList<Library>();
+        usingLibraries = new ArrayList<Library>();
     }
 
     /**
@@ -29,34 +29,38 @@ public class LibraryModel {
      * @param gradleScript
      */
     public void init(String gradleScript) {
-        libraries = extractLibraries(gradleScript);
+        usingLibraries = extractLibraries(gradleScript);
 
-        for (int i = 0; i < libraries.size(); i++) {
-            libraries.get(i).setMetaDataUrl(createMetaDataUrl(libraries.get(i)));
+        for (int i = 0; i < usingLibraries.size(); i++) {
+            usingLibraries.get(i).setMetaDataUrl(createMetaDataUrl(usingLibraries.get(i)));
         }
     }
 
-    public List<Library> getLibraries() {
-        return libraries;
+    public List<Library> getUsingLibraries() {
+        return usingLibraries;
     }
 
     public Observable<GetLatestLibrariesResult> getLatestLibraries() {
         return Observable.create(new Observable.OnSubscribe<GetLatestLibrariesResult>() {
             @Override
             public void call(Subscriber<? super GetLatestLibrariesResult> subscriber) {
-                List<LatestLibrary> getResults = new ArrayList<LatestLibrary>();
+                List<Library> latestLibraries = new ArrayList<Library>();
 
-                for (int i = 0; i < libraries.size(); i++) {
+                for (int i = 0; i < usingLibraries.size(); i++) {
+                    String latestVersion;
                     try {
-                        String latestVersion = getLatestVersion(libraries.get(i));
-                        getResults.add(new LatestLibrary(libraries.get(i), latestVersion));
+                        latestVersion = getLatestVersion(usingLibraries.get(i));
                     } catch (Exception e) {
-                        getResults.add(new LatestLibrary(libraries.get(i), "Not Found"));
+                        latestVersion = "Not Found";
                     }
-                    subscriber.onNext(new GetLatestLibrariesResult(null, "<b>Getting latest versions (" + (i+1) + "/" + libraries.size() + ")</b>"));
+
+                    Library latestLibrary = new Library(usingLibraries.get(i));
+                    latestLibrary.setVersion(latestVersion);
+                    latestLibraries.add(latestLibrary);
+                    subscriber.onNext(new GetLatestLibrariesResult(null, "<b>Getting latest versions (" + (i+1) + "/" + usingLibraries.size() + ")</b>"));
                 }
 
-                subscriber.onNext(new GetLatestLibrariesResult(getResults, null));
+                subscriber.onNext(new GetLatestLibrariesResult(latestLibraries, null));
             }
         });
 
@@ -110,29 +114,16 @@ public class LibraryModel {
                 .toString();
     }
 
-    public static class LatestLibrary extends Library {
-        String version;
-
-        public LatestLibrary(Library library, String version) {
-            super(library.getGroupId(), library.getArtifactId(), library.getCurrentUsingVersion());
-            this.version = version;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-    }
-
     public static class GetLatestLibrariesResult {
-        List<LatestLibrary> latestLibraries;
+        List<Library> latestLibraries;
         String progress;
 
-        public GetLatestLibrariesResult(List<LatestLibrary> latestLibraries, String progress) {
+        public GetLatestLibrariesResult(List<Library> latestLibraries, String progress) {
             this.latestLibraries = latestLibraries;
             this.progress = progress;
         }
 
-        public List<LatestLibrary> getLatestLibraries() {
+        public List<Library> getLatestLibraries() {
             return latestLibraries;
         }
 
