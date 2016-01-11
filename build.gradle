@@ -21,5 +21,6 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile 'io.reactivex:rxjava:1.1.0'
+    compile 'io.reactivex:rxswing:0.24.0'
 }
