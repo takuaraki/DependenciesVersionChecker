@@ -1,0 +1,25 @@
+plugins {
+    id "org.jetbrains.intellij" version "0.0.20"
+}
+
+group 'io.github.takuaraki'
+version '1.1-SNAPSHOT'
+
+apply plugin: 'java'
+
+apply plugin: 'org.jetbrains.intellij'
+intellij {
+    version '14.1.4'
+    plugins 'coverage'
+    pluginName 'sample'
+}
+
+sourceCompatibility = 1.6
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
