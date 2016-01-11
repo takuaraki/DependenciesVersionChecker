@@ -12,6 +12,7 @@ import models.LibraryModel;
 import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
+import rx.schedulers.SwingScheduler;
 import viewmodels.VersionCheckViewModel;
 
 import javax.swing.*;
@@ -71,6 +72,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
                 versionCheckViewModel
                         .getLatestVersions()
                         .subscribeOn(Schedulers.io())
+                        .observeOn(SwingScheduler.getInstance())
                         .subscribe(new Action1<LibraryModel.GetLatestLibrariesResult>() {
                             @Override
                             public void call(LibraryModel.GetLatestLibrariesResult getLatestLibrariesResult) {

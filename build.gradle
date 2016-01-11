@@ -22,4 +22,5 @@ repositories {
 
 dependencies {
     compile 'io.reactivex:rxjava:1.1.0'
+    compile 'io.reactivex:rxswing:0.24.0'
 }
