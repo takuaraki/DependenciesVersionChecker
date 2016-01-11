@@ -6,7 +6,6 @@ import groovy.util.XmlParser;
 import groovy.xml.QName;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.FuncN;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,41 +40,33 @@ public class LibraryModel {
         return libraries;
     }
 
-    public Observable<List<GetLatestLibraryResult>> getLatestLibraries() {
-        List<Observable<GetLatestLibraryResult>> observables = new ArrayList<Observable<GetLatestLibraryResult>>();
-        for (Library library : libraries) {
-            observables.add(getLatestLibrary(library));
-        }
-
-        return Observable.zip(observables, new FuncN<List<GetLatestLibraryResult>>() {
+    public Observable<GetLatestLibrariesResult> getLatestLibraries() {
+        return Observable.create(new Observable.OnSubscribe<GetLatestLibrariesResult>() {
             @Override
-            public List<GetLatestLibraryResult> call(Object... args) {
-                List<GetLatestLibraryResult> latestVersions = new ArrayList<GetLatestLibraryResult>();
-                for (Object arg : args) {
-                    GetLatestLibraryResult latestVersion = (GetLatestLibraryResult) arg;
-                    latestVersions.add(latestVersion);
+            public void call(Subscriber<? super GetLatestLibrariesResult> subscriber) {
+                List<LatestLibrary> getResults = new ArrayList<LatestLibrary>();
+
+                for (int i = 0; i < libraries.size(); i++) {
+                    try {
+                        String latestVersion = getLatestVersion(libraries.get(i));
+                        getResults.add(new LatestLibrary(libraries.get(i), latestVersion));
+                    } catch (Exception e) {
+                        getResults.add(new LatestLibrary(libraries.get(i), "Not Found"));
+                    }
+                    subscriber.onNext(new GetLatestLibrariesResult(null, "<b>Getting latest versions (" + (i+1) + "/" + libraries.size() + ")</b>"));
                 }
-                return latestVersions;
+
+                subscriber.onNext(new GetLatestLibrariesResult(getResults, null));
             }
         });
+
     }
 
-    public Observable<GetLatestLibraryResult> getLatestLibrary(final Library library) {
-        return Observable.create(new Observable.OnSubscribe<GetLatestLibraryResult>() {
-            @Override
-            public void call(Subscriber<? super GetLatestLibraryResult> subscriber) {
-                try {
-                    XmlParser xmlParser = new XmlParser();
-                    Node node = xmlParser.parse(library.getMetaDataUrl());
-                    String latestVersion = node.getAt(QName.valueOf("versioning")).getAt("latest").text();
-                    subscriber.onNext(new GetLatestLibraryResult(library, latestVersion));
-                    subscriber.onCompleted();
-                } catch (Exception e) {
-                    subscriber.onNext(new GetLatestLibraryResult(library, "Not Found"));
-                    subscriber.onCompleted();
-                }
-            }
-        });
+    private String getLatestVersion(Library library) throws Exception {
+        XmlParser xmlParser = new XmlParser();
+        Node node = xmlParser.parse(library.getMetaDataUrl());
+        String latestVersion = node.getAt(QName.valueOf("versioning")).getAt("latest").text();
+        return latestVersion;
     }
 
     /**
@@ -119,21 +110,34 @@ public class LibraryModel {
                 .toString();
     }
 
-    public static class GetLatestLibraryResult {
-        Library library;
-        String latestVersion;
+    public static class LatestLibrary extends Library {
+        String version;
 
-        public GetLatestLibraryResult(Library library, String latestVersion) {
-            this.library = library;
-            this.latestVersion = latestVersion;
+        public LatestLibrary(Library library, String version) {
+            super(library.getGroupId(), library.getArtifactId(), library.getCurrentUsingVersion());
+            this.version = version;
         }
 
-        public Library getLibrary() {
-            return library;
+        public String getVersion() {
+            return version;
+        }
+    }
+
+    public static class GetLatestLibrariesResult {
+        List<LatestLibrary> latestLibraries;
+        String progress;
+
+        public GetLatestLibrariesResult(List<LatestLibrary> latestLibraries, String progress) {
+            this.latestLibraries = latestLibraries;
+            this.progress = progress;
         }
 
-        public String getLatestVersion() {
-            return latestVersion;
+        public List<LatestLibrary> getLatestLibraries() {
+            return latestLibraries;
+        }
+
+        public String getProgress() {
+            return progress;
         }
     }
 }

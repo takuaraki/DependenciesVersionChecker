@@ -12,7 +12,6 @@ import groovy.util.XmlParser;
 import groovy.xml.QName;
 import models.LibraryModel;
 import org.jetbrains.annotations.NotNull;
-import rx.Scheduler;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import viewmodels.VersionCheckViewModel;
@@ -76,18 +75,23 @@ public class VersionCheckWindow implements ToolWindowFactory {
                 versionCheckViewModel
                         .getLatestVersions()
                         .subscribeOn(Schedulers.io())
-                        .subscribe(new Action1<List<LibraryModel.GetLatestLibraryResult>>() {
+                        .subscribe(new Action1<LibraryModel.GetLatestLibrariesResult>() {
                             @Override
-                            public void call(List<LibraryModel.GetLatestLibraryResult> results) {
+                            public void call(LibraryModel.GetLatestLibrariesResult getLatestLibrariesResult) {
+                                if (getLatestLibrariesResult.getLatestLibraries() == null) {
+                                    resultArea.setText(getLatestLibrariesResult.getProgress());
+                                    return;
+                                }
+
                                 StringBuilder stringBuilder = new StringBuilder();
                                 stringBuilder.append("<table>")
                                         .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
-                                for (LibraryModel.GetLatestLibraryResult result : results) {
+                                for (LibraryModel.LatestLibrary library : getLatestLibrariesResult.getLatestLibraries()) {
                                     stringBuilder
                                             .append("<tr>")
-                                            .append("<td><a href=\"").append(result.getLibrary().getMetaDataUrl()).append("\">")
-                                            .append(result.getLibrary().getGroupId()).append(":").append(result.getLibrary().getArtifactId()).append("</a></td>")
-                                            .append("<td>").append(result.getLatestVersion()).append("</td>")
+                                            .append("<td><a href=\"").append(library.getMetaDataUrl()).append("\">")
+                                            .append(library.getGroupId()).append(":").append(library.getArtifactId()).append("</a></td>")
+                                            .append("<td>").append(library.getVersion()).append("</td>")
                                             .append("</tr>");
                                 }
                                 resultArea.setText(stringBuilder.toString());
@@ -119,29 +123,5 @@ public class VersionCheckWindow implements ToolWindowFactory {
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(toowWindowContent, "", false);
         toolWindow.getContentManager().addContent(content);
-    }
-
-    /**
-     * 最新のライブラリバーションを取得する
-     *
-     * @param metaDataUrls メタデータ取得用のURLリスト
-     * @return
-     */
-    private List<String> getLatestVersions(List<String> metaDataUrls) {
-        int urlNum = metaDataUrls.size();
-        List<String> latestVersions = new ArrayList<String>();
-
-        for (int i = 0; i < urlNum; i++) {
-            resultArea.setText("<b>Getting latest versions (" + (i+1) + "/" + urlNum + ")</b>");
-            try {
-                XmlParser xmlParser = new XmlParser();
-                Node node = xmlParser.parse(metaDataUrls.get(i));
-                String latestVersion = node.getAt(QName.valueOf("versioning")).getAt("latest").text();
-                latestVersions.add(latestVersion);
-            } catch (Exception e1) {
-                latestVersions.add("Not Found");
-            }
-        }
-        return latestVersions;
     }
 }

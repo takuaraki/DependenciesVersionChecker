@@ -30,7 +30,7 @@ public class VersionCheckViewModel {
         return libraryModel.getLibraries();
     }
 
-    public Observable<List<LibraryModel.GetLatestLibraryResult>> getLatestVersions() {
+    public Observable<LibraryModel.GetLatestLibrariesResult> getLatestVersions() {
         return libraryModel.getLatestLibraries();
     }
 }
