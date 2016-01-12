@@ -24,6 +24,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * バーションチェックを行うToolWindow
@@ -81,20 +82,9 @@ public class VersionCheckWindow implements ToolWindowFactory {
                                     return;
                                 }
 
-                                StringBuilder stringBuilder = new StringBuilder();
-                                stringBuilder.append("<table>")
-                                        .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
-                                for (Library library : getLatestLibrariesResult.getLatestLibraries()) {
-                                    stringBuilder
-                                            .append("<tr>")
-                                            .append("<td><a href=\"").append(library.getMetaDataUrl()).append("\">")
-                                            .append(library.getGroupId()).append(":").append(library.getArtifactId()).append("</a></td>")
-                                            .append("<td>").append(library.getVersion()).append("</td>")
-                                            .append("</tr>");
-                                }
-                                resultArea.setText(stringBuilder.toString());
+                                resultArea.setText(createResult(getLatestLibrariesResult.getLatestLibraries()));
 
-                                Notifications.Bus.notify(new Notification("versionCheckStart", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
+                                Notifications.Bus.notify(new Notification("versionCheckFinish", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
                             }
                         });
             }
@@ -114,6 +104,21 @@ public class VersionCheckWindow implements ToolWindowFactory {
                 }
             }
         });
+    }
+
+    private String createResult(List<Library> libraries) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("<table>")
+                .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
+        for (Library library : libraries) {
+            stringBuilder
+                    .append("<tr>")
+                    .append("<td><a href=\"").append(library.getMetaDataUrl()).append("\">")
+                    .append(library.getGroupId()).append(":").append(library.getArtifactId()).append("</a></td>")
+                    .append("<td>").append(library.getVersion()).append("</td>")
+                    .append("</tr></table>");
+        }
+        return stringBuilder.toString();
     }
 
     @Override
