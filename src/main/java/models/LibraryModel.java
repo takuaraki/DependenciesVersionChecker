@@ -57,10 +57,10 @@ public class LibraryModel {
                     Library latestLibrary = new Library(usingLibraries.get(i));
                     latestLibrary.setVersion(latestVersion);
                     latestLibraries.add(latestLibrary);
-                    subscriber.onNext(new GetLatestLibrariesResult(null, "<b>Getting latest versions (" + (i+1) + "/" + usingLibraries.size() + ")</b>"));
+                    subscriber.onNext(new GetLatestLibrariesResult(null, usingLibraries,"<b>Getting latest versions (" + (i+1) + "/" + usingLibraries.size() + ")</b>"));
                 }
 
-                subscriber.onNext(new GetLatestLibrariesResult(latestLibraries, null));
+                subscriber.onNext(new GetLatestLibrariesResult(latestLibraries, usingLibraries, null));
             }
         });
 
@@ -116,15 +116,21 @@ public class LibraryModel {
 
     public static class GetLatestLibrariesResult {
         List<Library> latestLibraries;
+        List<Library> usingLibraries;
         String progress;
 
-        public GetLatestLibrariesResult(List<Library> latestLibraries, String progress) {
+        public GetLatestLibrariesResult(List<Library> latestLibraries, List<Library> usingLibraries, String progress) {
             this.latestLibraries = latestLibraries;
+            this.usingLibraries = usingLibraries;
             this.progress = progress;
         }
 
         public List<Library> getLatestLibraries() {
             return latestLibraries;
+        }
+
+        public List<Library> getUsingLibraries() {
+            return usingLibraries;
         }
 
         public String getProgress() {
