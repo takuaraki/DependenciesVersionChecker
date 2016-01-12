@@ -82,7 +82,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
                                     return;
                                 }
 
-                                resultArea.setText(createResult(getLatestLibrariesResult.getLatestLibraries()));
+                                resultArea.setText(createResult(getLatestLibrariesResult.getUsingLibraries(), getLatestLibrariesResult.getLatestLibraries()));
 
                                 Notifications.Bus.notify(new Notification("versionCheckFinish", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
                             }
@@ -106,18 +106,20 @@ public class VersionCheckWindow implements ToolWindowFactory {
         });
     }
 
-    private String createResult(List<Library> libraries) {
+    private String createResult(List<Library> usingLibraries, List<Library> latestLibraries) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<table>")
-                .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
-        for (Library library : libraries) {
+                .append("<tr><th align=\"left\">Library</th><th align=\"left\">Using version</th><th align=\"left\">Latest version</th></tr>");
+        for (int i = 0; i < usingLibraries.size(); i++) {
             stringBuilder
                     .append("<tr>")
-                    .append("<td><a href=\"").append(library.getMetaDataUrl()).append("\">")
-                    .append(library.getGroupId()).append(":").append(library.getArtifactId()).append("</a></td>")
-                    .append("<td>").append(library.getVersion()).append("</td>")
-                    .append("</tr></table>");
+                    .append("<td><a href=\"").append(usingLibraries.get(i).getMetaDataUrl()).append("\">")
+                    .append(usingLibraries.get(i).getGroupId()).append(":").append(usingLibraries.get(i).getArtifactId()).append("</a></td>")
+                    .append("<td>").append(usingLibraries.get(i).getVersion()).append("</td>")
+                    .append("<td>").append(latestLibraries.get(i).getVersion()).append("</td>")
+                    .append("</tr>");
         }
+        stringBuilder.append("</table>");
         return stringBuilder.toString();
     }
 
