@@ -81,7 +81,7 @@ public class LibraryModel {
      */
     private List<Library> extractLibraries(final String gradleScript) {
         String text = new String(gradleScript);
-        Pattern p = Pattern.compile("(?:compile|provided|debugCompile|releaseCompile|testCompile)(?: |\\()+(?:'|\")(.*):(.*):(.*)(?:'|\")");
+        Pattern p = Pattern.compile("(?:compile|provided|debugCompile|releaseCompile|testCompile)(?: *| *\\()(?:'|\")(.*):(.*):(.*)(?:'|\")");
         Matcher m = p.matcher(text);
         List<Library> libraries = new ArrayList<Library>();
 
