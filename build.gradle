@@ -1,0 +1,26 @@
+plugins {
+    id "org.jetbrains.intellij" version "0.0.20"
+}
+
+group 'io.github.takuaraki'
+version '1.1'
+
+apply plugin: 'java'
+
+apply plugin: 'org.jetbrains.intellij'
+intellij {
+    version '15.0.2'
+    plugins 'coverage'
+    pluginName 'Dependencies Version Checker'
+}
+
+sourceCompatibility = 1.6
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'io.reactivex:rxjava:1.1.0'
+    compile 'io.reactivex:rxswing:0.24.0'
+}

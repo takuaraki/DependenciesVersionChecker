@@ -7,21 +7,23 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.HyperlinkAdapter;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import groovy.util.Node;
-import groovy.util.XmlParser;
-import groovy.xml.QName;
+import entity.Library;
+import models.LibraryModel;
 import org.jetbrains.annotations.NotNull;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import rx.schedulers.SwingScheduler;
+import viewmodels.VersionCheckViewModel;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import java.awt.*;
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +39,11 @@ public class VersionCheckWindow implements ToolWindowFactory {
     private JTextArea inputArea;
     private JEditorPane resultArea;
 
+    VersionCheckViewModel versionCheckViewModel;
+
     public VersionCheckWindow() {
+        versionCheckViewModel = new VersionCheckViewModel();
+
         inputArea.setText(INPUT_AREA_HINT);
         inputArea.addFocusListener(new FocusListener() {
             @Override
@@ -58,35 +64,29 @@ public class VersionCheckWindow implements ToolWindowFactory {
         versionCheckButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                String gradleScript = inputArea.getText();
-
-                final List<String> libraryDeclarationTexts = GradleScriptParsingUtils.extractLibraryDeclarationTexts(gradleScript);
-                if (libraryDeclarationTexts.size() == 0) {
+                versionCheckViewModel.init(inputArea.getText());
+                if (versionCheckViewModel.getLibraries().size() == 0) {
                     resultArea.setText(ERROR_MESSAGE_NO_LIBRARY);
                     return;
                 }
 
-                final List<String> metaDataUrls = GradleScriptParsingUtils.createMetaDataUrls(libraryDeclarationTexts);
+                versionCheckViewModel
+                        .getLatestVersions()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(SwingScheduler.getInstance())
+                        .subscribe(new Action1<LibraryModel.GetLatestLibrariesResult>() {
+                            @Override
+                            public void call(LibraryModel.GetLatestLibrariesResult getLatestLibrariesResult) {
+                                if (getLatestLibrariesResult.getLatestLibraries() == null) {
+                                    resultArea.setText(getLatestLibrariesResult.getProgress());
+                                    return;
+                                }
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        List<String> latestVersions = getLatestVersions(metaDataUrls);
-                        StringBuilder stringBuilder = new StringBuilder();
-                        stringBuilder.append("<table>")
-                                .append("<tr><th align=\"left\">Library</th><th align=\"left\">Latest version</th></tr>");
-                        for (int i = 0; i < libraryDeclarationTexts.size(); i++) {
-                            stringBuilder
-                                    .append("<tr>")
-                                    .append("<td><a href=\"" + metaDataUrls.get(i) + "\">" + libraryDeclarationTexts.get(i) + "</a></td><td>" + latestVersions.get(i) + "</td>")
-                                    .append("</tr>");
-                        }
-                        stringBuilder.append("</table>");
-                        resultArea.setText(stringBuilder.toString());
+                                resultArea.setText(createResult(getLatestLibrariesResult.getUsingLibraries(), getLatestLibrariesResult.getLatestLibraries()));
 
-                        Notifications.Bus.notify(new Notification("versionCheckStart", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
-                    }
-                }).start();
+                                Notifications.Bus.notify(new Notification("versionCheckFinish", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
+                            }
+                        });
             }
         });
 
@@ -106,34 +106,27 @@ public class VersionCheckWindow implements ToolWindowFactory {
         });
     }
 
+    private String createResult(List<Library> usingLibraries, List<Library> latestLibraries) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("<table>")
+                .append("<tr><th align=\"left\">Library</th><th align=\"left\">Using version</th><th align=\"left\">Latest version</th></tr>");
+        for (int i = 0; i < usingLibraries.size(); i++) {
+            stringBuilder
+                    .append("<tr>")
+                    .append("<td><a href=\"").append(usingLibraries.get(i).getMetaDataUrl()).append("\">")
+                    .append(usingLibraries.get(i).getGroupId()).append(":").append(usingLibraries.get(i).getArtifactId()).append("</a></td>")
+                    .append("<td>").append(usingLibraries.get(i).getVersion()).append("</td>")
+                    .append("<td>").append(latestLibraries.get(i).getVersion()).append("</td>")
+                    .append("</tr>");
+        }
+        stringBuilder.append("</table>");
+        return stringBuilder.toString();
+    }
+
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(toowWindowContent, "", false);
         toolWindow.getContentManager().addContent(content);
-    }
-
-    /**
-     * 最新のライブラリバーションを取得する
-     *
-     * @param metaDataUrls メタデータ取得用のURLリスト
-     * @return
-     */
-    private List<String> getLatestVersions(List<String> metaDataUrls) {
-        int urlNum = metaDataUrls.size();
-        List<String> latestVersions = new ArrayList<String>();
-
-        for (int i = 0; i < urlNum; i++) {
-            resultArea.setText("<b>Getting latest versions (" + (i+1) + "/" + urlNum + ")</b>");
-            try {
-                XmlParser xmlParser = new XmlParser();
-                Node node = xmlParser.parse(metaDataUrls.get(i));
-                String latestVersion = node.getAt(QName.valueOf("versioning")).getAt("latest").text();
-                latestVersions.add(latestVersion);
-            } catch (Exception e1) {
-                latestVersions.add("Not Found");
-            }
-        }
-        return latestVersions;
     }
 }
