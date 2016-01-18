@@ -80,8 +80,22 @@ public class LibraryModel {
      * @return
      */
     private List<Library> extractLibraries(final String gradleScript) {
+        List<Library> libraries = new ArrayList<Library>();
+
+        // ex) compile compile 'io.reactivex:rxjava:1.1.0'
+        String stringNotationRegex = "(?:compile|provided|debugCompile|releaseCompile|testCompile)(?: *| *\\()(?:'|\")(.*):(.*):(.*)(?:'|\")";
+        libraries.addAll(extractLibraries(gradleScript, stringNotationRegex));
+
+        // ex) compile group 'io.reactivex', name 'rxjava' version '1.1.0'
+        String mapStyleNotationRegex = "(?:compile|provided|debugCompile|releaseCompile|testCompile)(?: +| *\\()group *: *(?:'|\")(.*)(?:'|\") *, *name *: *(?:'|\")(.*)(?:'|\"), *version *: *(?:'|\")(.*)(?:'|\")";
+        libraries.addAll(extractLibraries(gradleScript, mapStyleNotationRegex));
+
+        return libraries;
+    }
+
+    private List<Library> extractLibraries(final String gradleScript, String regex) {
         String text = new String(gradleScript);
-        Pattern p = Pattern.compile("(?:compile|provided|debugCompile|releaseCompile|testCompile) +'(.*):(.*):(.*)'");
+        Pattern p = Pattern.compile(regex);
         Matcher m = p.matcher(text);
         List<Library> libraries = new ArrayList<Library>();
 
