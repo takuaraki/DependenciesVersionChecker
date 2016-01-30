@@ -1,8 +1,6 @@
 package models;
 
-import entities.repositories.JCenterRepository;
-import entities.repositories.MavenCentralRepository;
-import entities.repositories.Repository;
+import entities.repositories.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +16,8 @@ public class RepositoryModel {
 
     public void init(String gradleScript) {
         repositories = new ArrayList<Repository>();
+        repositories.add(new AndroidRepository());
+        repositories.add(new GoogleRepository());
         repositories.add(new MavenCentralRepository());
         repositories.add(new JCenterRepository());
         repositories.addAll(extractRepositories(gradleScript));
