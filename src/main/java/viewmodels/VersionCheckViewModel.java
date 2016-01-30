@@ -16,6 +16,7 @@ public class VersionCheckViewModel {
     LibraryModel libraryModel;
 
     public VersionCheckViewModel() {
+        this.repositoryModel = new RepositoryModel();
         this.libraryModel = new LibraryModel();
     }
 
@@ -34,6 +35,6 @@ public class VersionCheckViewModel {
     }
 
     public Observable<LibraryModel.GetLatestLibrariesResult> getLatestVersions() {
-        return libraryModel.getLatestLibraries();
+        return libraryModel.getLatestLibraries(repositoryModel.getRepositories());
     }
 }

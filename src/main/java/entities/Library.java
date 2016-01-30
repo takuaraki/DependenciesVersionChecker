@@ -43,7 +43,11 @@ public class Library {
         return metaDataUrl;
     }
 
-    public void setMetaDataUrl(String metaDataUrl) {
-        this.metaDataUrl = metaDataUrl;
+    public void setMetaDataUrl(String repositoryUrl) {
+        this.metaDataUrl = repositoryUrl + getMetaDataPath();
+    }
+
+    public String getMetaDataPath() {
+        return groupId.replace(".", "/") + "/" + artifactId + "/maven-metadata.xml";
     }
 }
