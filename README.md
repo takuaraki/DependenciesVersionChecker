@@ -11,6 +11,5 @@ show latest library versions searched in Maven Repository.
 ![How uo use](README/howToUse.gif)
 
 ## Future works
-- [ ] Report library versions declared in your 'build.gradle'.
-- [ ] Check google and android library versions from your local repository.
-- [ ] Run version check from ProjectViewPopupMenu.
+- [x] Report library versions declared in your 'build.gradle'.
+- [x] Check google and android library versions from your local repository.
