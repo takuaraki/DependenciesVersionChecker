@@ -9,6 +9,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import entities.Library;
 import models.LibraryModel;
+import org.apache.http.util.TextUtils;
 import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -111,11 +112,21 @@ public class VersionCheckWindow implements ToolWindowFactory {
         stringBuilder.append("<table>")
                 .append("<tr><th align=\"left\">Library</th><th align=\"left\">Using version</th><th align=\"left\">Latest version</th></tr>");
         for (int i = 0; i < usingLibraries.size(); i++) {
+            Library usingLibrary = usingLibraries.get(i);
+
+            String extractedLibrary;
+            if (TextUtils.isEmpty(usingLibrary.getMetaDataUrl())) {
+                extractedLibrary = usingLibrary.getGroupId() + ":" + usingLibrary.getArtifactId();
+            } else {
+                extractedLibrary =
+                        "<a href=\"" + usingLibrary.getMetaDataUrl() + "\">"
+                                + usingLibrary.getGroupId() + ":" + usingLibrary.getArtifactId() + "</a>";
+            }
+
             stringBuilder
                     .append("<tr>")
-                    .append("<td><a href=\"").append(usingLibraries.get(i).getMetaDataUrl()).append("\">")
-                    .append(usingLibraries.get(i).getGroupId()).append(":").append(usingLibraries.get(i).getArtifactId()).append("</a></td>")
-                    .append("<td>").append(usingLibraries.get(i).getVersion()).append("</td>")
+                    .append("<td>").append(extractedLibrary).append("</td>")
+                    .append("<td>").append(usingLibrary.getVersion()).append("</td>")
                     .append("<td>").append(latestLibraries.get(i).getVersion()).append("</td>")
                     .append("</tr>");
         }

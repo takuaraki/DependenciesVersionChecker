@@ -17,10 +17,10 @@ public class Library {
     }
 
     public Library(Library library) {
-        this.groupId = library.getGroupId();
-        this.artifactId = library.getArtifactId();
-        this.version = library.getVersion();
-        this.metaDataUrl = library.getMetaDataUrl();
+        this.groupId = library.groupId;
+        this.artifactId = library.artifactId;
+        this.version = library.version;
+        this.metaDataUrl = library.metaDataUrl;
     }
 
     public String getGroupId() {
