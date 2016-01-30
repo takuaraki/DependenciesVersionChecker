@@ -1,4 +1,4 @@
-package entity;
+package entities;
 
 /**
  * Library available from maven repository.
@@ -17,10 +17,10 @@ public class Library {
     }
 
     public Library(Library library) {
-        this.groupId = library.getGroupId();
-        this.artifactId = library.getArtifactId();
-        this.version = library.getVersion();
-        this.metaDataUrl = library.getMetaDataUrl();
+        this.groupId = library.groupId;
+        this.artifactId = library.artifactId;
+        this.version = library.version;
+        this.metaDataUrl = library.metaDataUrl;
     }
 
     public String getGroupId() {
@@ -43,7 +43,11 @@ public class Library {
         return metaDataUrl;
     }
 
-    public void setMetaDataUrl(String metaDataUrl) {
-        this.metaDataUrl = metaDataUrl;
+    public void setMetaDataUrl(String repositoryUrl) {
+        this.metaDataUrl = repositoryUrl + getMetaDataPath();
+    }
+
+    public String getMetaDataPath() {
+        return groupId.replace(".", "/") + "/" + artifactId + "/maven-metadata.xml";
     }
 }
