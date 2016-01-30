@@ -7,7 +7,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.HyperlinkAdapter;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import entity.Library;
+import entities.Library;
 import models.LibraryModel;
 import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;

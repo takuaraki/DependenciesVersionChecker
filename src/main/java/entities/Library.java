@@ -1,4 +1,4 @@
-package entity;
+package entities;
 
 /**
  * Library available from maven repository.

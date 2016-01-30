@@ -1,6 +1,6 @@
 package models;
 
-import entity.Library;
+import entities.Library;
 import groovy.util.Node;
 import groovy.util.XmlParser;
 import groovy.xml.QName;

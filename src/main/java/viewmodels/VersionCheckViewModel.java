@@ -1,6 +1,6 @@
 package viewmodels;
 
-import entity.Library;
+import entities.Library;
 import models.LibraryModel;
 import rx.Observable;
 
