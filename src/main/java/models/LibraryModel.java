@@ -1,6 +1,7 @@
 package models;
 
-import entity.Library;
+import entities.Library;
+import entities.repositories.Repository;
 import groovy.util.Node;
 import groovy.util.XmlParser;
 import groovy.xml.QName;
@@ -30,28 +31,29 @@ public class LibraryModel {
      */
     public void init(String gradleScript) {
         usingLibraries = extractLibraries(gradleScript);
-
-        for (int i = 0; i < usingLibraries.size(); i++) {
-            usingLibraries.get(i).setMetaDataUrl(createMetaDataUrl(usingLibraries.get(i)));
-        }
     }
 
     public List<Library> getUsingLibraries() {
         return usingLibraries;
     }
 
-    public Observable<GetLatestLibrariesResult> getLatestLibraries() {
+    public Observable<GetLatestLibrariesResult> getLatestLibraries(final List<Repository> repositories) {
         return Observable.create(new Observable.OnSubscribe<GetLatestLibrariesResult>() {
             @Override
             public void call(Subscriber<? super GetLatestLibrariesResult> subscriber) {
                 List<Library> latestLibraries = new ArrayList<Library>();
 
                 for (int i = 0; i < usingLibraries.size(); i++) {
-                    String latestVersion;
-                    try {
-                        latestVersion = getLatestVersion(usingLibraries.get(i));
-                    } catch (Exception e) {
-                        latestVersion = "Not Found";
+                    String latestVersion = "Not Found";
+
+                    for (Repository repository : repositories) {
+                        try {
+                            latestVersion = getLatestVersion(usingLibraries.get(i), repository);
+                            usingLibraries.get(i).setMetaDataUrl(repository.getUrl());
+                            break;
+                        } catch (Exception e) {
+                            // meta data not found
+                        }
                     }
 
                     Library latestLibrary = new Library(usingLibraries.get(i));
@@ -66,9 +68,9 @@ public class LibraryModel {
 
     }
 
-    private String getLatestVersion(Library library) throws Exception {
+    private String getLatestVersion(Library library, Repository repository) throws Exception {
         XmlParser xmlParser = new XmlParser();
-        Node node = xmlParser.parse(library.getMetaDataUrl());
+        Node node = xmlParser.parse(repository.getUrl() + library.getMetaDataPath());
         String latestVersion = node.getAt(QName.valueOf("versioning")).getAt("latest").text();
         return latestVersion;
     }
@@ -111,21 +113,6 @@ public class LibraryModel {
         }
 
         return libraries;
-    }
-
-    /**
-     * create URL to access meta data of library
-     *
-     * @param library
-     * @return
-     */
-    private String createMetaDataUrl(Library library) {
-        return new StringBuilder("http://repo1.maven.org/maven2/")
-                .append(library.getGroupId().replace(".", "/"))
-                .append("/")
-                .append(library.getArtifactId())
-                .append("/maven-metadata.xml")
-                .toString();
     }
 
     public static class GetLatestLibrariesResult {

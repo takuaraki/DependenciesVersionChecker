@@ -1,7 +1,8 @@
 package viewmodels;
 
-import entity.Library;
+import entities.Library;
 import models.LibraryModel;
+import models.RepositoryModel;
 import rx.Observable;
 
 import java.util.List;
@@ -11,9 +12,11 @@ import java.util.List;
  */
 public class VersionCheckViewModel {
 
+    RepositoryModel repositoryModel;
     LibraryModel libraryModel;
 
     public VersionCheckViewModel() {
+        this.repositoryModel = new RepositoryModel();
         this.libraryModel = new LibraryModel();
     }
 
@@ -23,6 +26,7 @@ public class VersionCheckViewModel {
      * @param gradleScript
      */
     public void init(String gradleScript) {
+        repositoryModel.init(gradleScript);
         libraryModel.init(gradleScript);
     }
 
@@ -31,6 +35,6 @@ public class VersionCheckViewModel {
     }
 
     public Observable<LibraryModel.GetLatestLibrariesResult> getLatestVersions() {
-        return libraryModel.getLatestLibraries();
+        return libraryModel.getLatestLibraries(repositoryModel.getRepositories());
     }
 }
