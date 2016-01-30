@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>io.github.takuaraki.dvc</id>
     <name>Dependencies Version Checker</name>
-    <version>1.1</version>
+    <version>1.2</version>
     <vendor email="takuaraki7@gmail.com" url="http://github.com/takuaraki/DependenciesVersionChecker">Depencencies Version Checker</vendor>
 
     <description><![CDATA[
@@ -9,8 +9,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
-      <p>1.0 first release</p>
-      <p>1.1 extract more patterns and show current using version</p>
+      <ul>
+        <li>support jcenter, android and google repositories.</li>
+        <li>extract repositories declared in 'build.gradle'.</li>
+      </ul>
     ]]>
     </change-notes>
 
