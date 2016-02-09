@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>io.github.takuaraki.dvc</id>
     <name>Dependencies Version Checker</name>
-    <version>1.2</version>
+    <version>1.3-SNAPSHOT</version>
     <vendor email="takuaraki7@gmail.com" url="http://github.com/takuaraki/DependenciesVersionChecker">Depencencies Version Checker</vendor>
 
     <description><![CDATA[
