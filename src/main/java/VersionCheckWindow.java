@@ -23,7 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -40,7 +40,10 @@ public class VersionCheckWindow implements ToolWindowFactory {
     private JTextArea inputArea;
     private JEditorPane resultArea;
 
+    private Project currentProject;
+
     VersionCheckViewModel versionCheckViewModel;
+
 
     public VersionCheckWindow() {
         versionCheckViewModel = new VersionCheckViewModel();
@@ -65,29 +68,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
         versionCheckButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                versionCheckViewModel.init(inputArea.getText());
-                if (versionCheckViewModel.getLibraries().size() == 0) {
-                    resultArea.setText(ERROR_MESSAGE_NO_LIBRARY);
-                    return;
-                }
-
-                versionCheckViewModel
-                        .getLatestVersions()
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(SwingScheduler.getInstance())
-                        .subscribe(new Action1<LibraryModel.GetLatestLibrariesResult>() {
-                            @Override
-                            public void call(LibraryModel.GetLatestLibrariesResult getLatestLibrariesResult) {
-                                if (getLatestLibrariesResult.getLatestLibraries() == null) {
-                                    resultArea.setText(getLatestLibrariesResult.getProgress());
-                                    return;
-                                }
-
-                                resultArea.setText(createResult(getLatestLibrariesResult.getUsingLibraries(), getLatestLibrariesResult.getLatestLibraries()));
-
-                                Notifications.Bus.notify(new Notification("versionCheckFinish", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
-                            }
-                        });
+                makeReWrittenScriptFile(inputArea.getText());
             }
         });
 
@@ -105,6 +86,33 @@ public class VersionCheckWindow implements ToolWindowFactory {
                 }
             }
         });
+    }
+
+    private void makeReWrittenScriptFile(String gradleScript) {
+        new File(currentProject.getBasePath() + "/build").mkdir();
+        new File(currentProject.getBasePath() + "/build/DependenciesVersionChecker").mkdir();
+        File file = new File(currentProject.getBasePath() + "/build/DependenciesVersionChecker/build.gradle");
+        file.delete();
+
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(new BufferedWriter(new FileWriter(file)));
+            pw.println(
+                    "buildscript {\n" +
+                            "    repositories {\n" +
+                            "        jcenter()\n" +
+                            "    }\n" +
+                            "    dependencies {\n" +
+                            "        classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'\n" +
+                            "    }\n" +
+                            "}\n" +
+                            "apply plugin: 'com.github.ben-manes.versions'");
+            pw.print(gradleScript);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            pw.close();
+        }
     }
 
     private String createResult(List<Library> usingLibraries, List<Library> latestLibraries) {
@@ -136,6 +144,7 @@ public class VersionCheckWindow implements ToolWindowFactory {
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+        currentProject = project;
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(toowWindowContent, "", false);
         toolWindow.getContentManager().addContent(content);
