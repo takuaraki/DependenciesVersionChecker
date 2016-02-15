@@ -10,6 +10,10 @@ import com.intellij.ui.content.ContentFactory;
 import entities.Library;
 import models.LibraryModel;
 import org.apache.http.util.TextUtils;
+import org.gradle.tooling.GradleConnectionException;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.ResultHandler;
 import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -69,6 +73,11 @@ public class VersionCheckWindow implements ToolWindowFactory {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 makeReWrittenScriptFile(inputArea.getText());
+
+                ProjectConnection connection = GradleConnector.newConnector()
+                        .forProjectDirectory(new File(currentProject.getBasePath() + "/build/DependenciesVersionChecker"))
+                        .connect();
+                connection.newBuild().forTasks("dependencyUpdates").withArguments("-DoutputFormatter=json").run();
             }
         });
 
