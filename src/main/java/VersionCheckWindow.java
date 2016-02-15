@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
@@ -7,6 +8,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.HyperlinkAdapter;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import entities.DependencyUpdatesResult;
 import entities.Library;
 import models.LibraryModel;
 import org.apache.http.util.TextUtils;
@@ -77,7 +79,17 @@ public class VersionCheckWindow implements ToolWindowFactory {
                 ProjectConnection connection = GradleConnector.newConnector()
                         .forProjectDirectory(new File(currentProject.getBasePath() + "/build/DependenciesVersionChecker"))
                         .connect();
-                connection.newBuild().forTasks("dependencyUpdates").withArguments("-DoutputFormatter=json").run();
+                connection.newBuild().forTasks("dependencyUpdates").withArguments("-DoutputFormatter=json").run(new ResultHandler<Void>() {
+                    @Override
+                    public void onComplete(Void aVoid) {
+                        parseDependencyUpdatesResult();
+                    }
+
+                    @Override
+                    public void onFailure(GradleConnectionException e) {
+
+                    }
+                });
             }
         });
 
@@ -95,6 +107,17 @@ public class VersionCheckWindow implements ToolWindowFactory {
                 }
             }
         });
+    }
+
+    private void parseDependencyUpdatesResult() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String jsonPath = currentProject.getBasePath() + "/build/DependenciesVersionChecker/build/dependencyUpdates/report.json";
+            DependencyUpdatesResult result = mapper.readValue(new File(jsonPath), DependencyUpdatesResult.class);
+            System.out.println(result);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void makeReWrittenScriptFile(String gradleScript) {
