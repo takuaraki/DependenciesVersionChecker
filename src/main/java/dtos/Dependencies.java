@@ -1,6 +1,4 @@
-package entities;
-
-import entities.Dependency;
+package dtos;
 
 import java.util.List;
 

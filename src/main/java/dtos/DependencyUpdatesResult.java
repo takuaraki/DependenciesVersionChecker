@@ -1,4 +1,4 @@
-package entities;
+package dtos;
 
 import java.util.List;
 

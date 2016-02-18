@@ -1,4 +1,4 @@
-package entities;
+package dtos;
 
 /**
  * Created by taku on 2016/02/15.
