@@ -8,6 +8,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.HyperlinkAdapter;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import entities.Dependency;
 import entities.DependencyUpdatesResult;
 import entities.Library;
 import models.LibraryModel;
@@ -82,7 +83,10 @@ public class VersionCheckWindow implements ToolWindowFactory {
                 connection.newBuild().forTasks("dependencyUpdates").withArguments("-DoutputFormatter=json").run(new ResultHandler<Void>() {
                     @Override
                     public void onComplete(Void aVoid) {
-                        parseDependencyUpdatesResult();
+                        DependencyUpdatesResult result = getDependencyUpdatesResult();
+                        resultArea.setText(createResult(result));
+
+                        Notifications.Bus.notify(new Notification("versionCheckFinish", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
                     }
 
                     @Override
@@ -109,15 +113,16 @@ public class VersionCheckWindow implements ToolWindowFactory {
         });
     }
 
-    private void parseDependencyUpdatesResult() {
+    private DependencyUpdatesResult getDependencyUpdatesResult() {
+        DependencyUpdatesResult result = null;
         ObjectMapper mapper = new ObjectMapper();
         try {
             String jsonPath = currentProject.getBasePath() + "/build/DependenciesVersionChecker/build/dependencyUpdates/report.json";
-            DependencyUpdatesResult result = mapper.readValue(new File(jsonPath), DependencyUpdatesResult.class);
-            System.out.println(result);
+            result = mapper.readValue(new File(jsonPath), DependencyUpdatesResult.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return result;
     }
 
     private void makeReWrittenScriptFile(String gradleScript) {
@@ -145,6 +150,45 @@ public class VersionCheckWindow implements ToolWindowFactory {
         } finally {
             pw.close();
         }
+    }
+
+    private String createResult(DependencyUpdatesResult result) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("<table>")
+                .append("<tr><th align=\"left\">Library</th><th align=\"left\">Using version</th><th align=\"left\">Latest version</th></tr>");
+
+        for (Dependency dependency : result.getCurrentDependencies()) {
+            String library = dependency.group + ":" + dependency.name;
+            stringBuilder
+                    .append("<tr>")
+                    .append("<td>").append(library).append("</td>")
+                    .append("<td>").append(dependency.version).append("</td>")
+                    .append("<td>").append(dependency.version).append("</td>")
+                    .append("</tr>");
+        }
+
+        for (Dependency dependency : result.getExceededDependencies()) {
+            String library = dependency.group + ":" + dependency.name;
+            stringBuilder
+                    .append("<tr>")
+                    .append("<td>").append(library).append("</td>")
+                    .append("<td>").append(dependency.version).append("</td>")
+                    .append("<td>").append(dependency.latest).append("</td>")
+                    .append("</tr>");
+        }
+
+        for (Dependency dependency : result.getOutdatedDependencies()) {
+            String library = dependency.group + ":" + dependency.name;
+            stringBuilder
+                    .append("<tr>")
+                    .append("<td>").append(library).append("</td>")
+                    .append("<td>").append(dependency.version).append("</td>")
+                    .append("<td>").append(dependency.available.milestone).append("</td>")
+                    .append("</tr>");
+        }
+
+        stringBuilder.append("</table>");
+        return stringBuilder.toString();
     }
 
     private String createResult(List<Library> usingLibraries, List<Library> latestLibraries) {

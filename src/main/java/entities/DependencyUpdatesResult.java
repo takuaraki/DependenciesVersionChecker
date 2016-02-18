@@ -1,5 +1,7 @@
 package entities;
 
+import java.util.List;
+
 /**
  * Json report created by gradle-versions-plugin
  */
@@ -10,8 +12,19 @@ public class DependencyUpdatesResult {
     public Dependencies unresolved;
     public int count;
 
-    @Override
-    public String toString() {
-        return "count: " + count;
+    public List<Dependency> getCurrentDependencies() {
+        return current.dependencies;
+    }
+
+    public List<Dependency> getExceededDependencies() {
+        return exceeded.dependencies;
+    }
+
+    public List<Dependency> getOutdatedDependencies() {
+        return outdated.dependencies;
+    }
+
+    public List<Dependency> getUnresolvedDependencies() {
+        return unresolved.dependencies;
     }
 }
