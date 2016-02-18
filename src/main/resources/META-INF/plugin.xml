@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>io.github.takuaraki.dvc</id>
     <name>Dependencies Version Checker</name>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3</version>
     <vendor email="takuaraki7@gmail.com" url="http://github.com/takuaraki/DependenciesVersionChecker">Depencencies Version Checker</vendor>
 
     <description><![CDATA[
@@ -10,8 +10,8 @@
 
     <change-notes><![CDATA[
       <ul>
-        <li>support jcenter, android and google repositories.</li>
-        <li>extract repositories declared in 'build.gradle'.</li>
+        <li>extract more libraries declared in 'build.gradle'.</li>
+        <li>Fix Error 'Unsupported major.minor version 52.0'</li>
       </ul>
     ]]>
     </change-notes>
