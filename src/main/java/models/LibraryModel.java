@@ -31,11 +31,16 @@ public class LibraryModel {
         return Observable.create(new Observable.OnSubscribe<List<Library>>() {
             @Override
             public void call(final Subscriber<? super List<Library>> subscriber) {
-                makeReWrittenScriptFile(gradleScript);
-
-                ProjectConnection connection = GradleConnector.newConnector()
-                        .forProjectDirectory(new File(basePath + "/build/DependenciesVersionChecker"))
-                        .connect();
+                ProjectConnection connection;
+                try {
+                    makeReWrittenScriptFile(gradleScript);
+                    connection = GradleConnector.newConnector()
+                            .forProjectDirectory(new File(basePath + "/build/DependenciesVersionChecker"))
+                            .connect();
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                    return;
+                }
 
                 connection.newBuild().forTasks("dependencyUpdates").withArguments("-DoutputFormatter=json").run(new ResultHandler<Void>() {
                     @Override
@@ -66,7 +71,7 @@ public class LibraryModel {
         });
     }
 
-    private void makeReWrittenScriptFile(String gradleScript) {
+    private void makeReWrittenScriptFile(String gradleScript) throws IOException {
         new File(basePath + "/build").mkdir();
         new File(basePath + "/build/DependenciesVersionChecker").mkdir();
         File file = new File(basePath + "/build/DependenciesVersionChecker/build.gradle");
@@ -88,6 +93,7 @@ public class LibraryModel {
             pw.print(gradleScript);
         } catch (IOException e) {
             e.printStackTrace();
+            throw e;
         } finally {
             pw.close();
         }

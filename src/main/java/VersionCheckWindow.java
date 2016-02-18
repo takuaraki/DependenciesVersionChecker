@@ -8,6 +8,7 @@ import com.intellij.ui.HyperlinkAdapter;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import entities.Library;
+import org.gradle.tooling.GradleConnectionException;
 import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -31,7 +32,6 @@ import java.util.List;
 public class VersionCheckWindow implements ToolWindowFactory {
 
     private static final String INPUT_AREA_HINT = "Input your 'build.gradle' script.";
-    private static final String ERROR_MESSAGE_NO_LIBRARY = "<span style=\"color:red\">[Error] No library declaration is found. Please input gradle script which contains dependencies blocks.</span>";
 
     private JPanel toowWindowContent;
     private JButton versionCheckButton;
@@ -87,6 +87,11 @@ public class VersionCheckWindow implements ToolWindowFactory {
                         }, new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
+                                if (throwable instanceof IOException) {
+                                    Notifications.Bus.notify(new Notification("versionCheckError", "Dependencies Version Checker", "I/O Error.", NotificationType.ERROR));
+                                } else if (throwable instanceof GradleConnectionException) {
+                                    Notifications.Bus.notify(new Notification("versionCheckError", "Dependencies Version Checker", "Error occurred when processing inputted script by gradle.", NotificationType.ERROR));
+                                }
 
                             }
                         });
