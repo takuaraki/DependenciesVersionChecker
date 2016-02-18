@@ -8,8 +8,7 @@ import com.intellij.ui.HyperlinkAdapter;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import entities.Library;
-import models.LibraryModel;
-import org.apache.http.util.TextUtils;
+import org.gradle.tooling.GradleConnectionException;
 import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -18,7 +17,7 @@ import viewmodels.VersionCheckViewModel;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import java.awt.Desktop;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -33,14 +32,23 @@ import java.util.List;
 public class VersionCheckWindow implements ToolWindowFactory {
 
     private static final String INPUT_AREA_HINT = "Input your 'build.gradle' script.";
-    private static final String ERROR_MESSAGE_NO_LIBRARY = "<span style=\"color:red\">[Error] No library declaration is found. Please input gradle script which contains dependencies blocks.</span>";
 
     private JPanel toowWindowContent;
     private JButton versionCheckButton;
     private JTextArea inputArea;
     private JEditorPane resultArea;
 
-    VersionCheckViewModel versionCheckViewModel;
+    private VersionCheckViewModel versionCheckViewModel;
+
+
+    @Override
+    public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+        versionCheckViewModel.init(project.getBasePath());
+
+        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        Content content = contentFactory.createContent(toowWindowContent, "", false);
+        toolWindow.getContentManager().addContent(content);
+    }
 
     public VersionCheckWindow() {
         versionCheckViewModel = new VersionCheckViewModel();
@@ -65,27 +73,26 @@ public class VersionCheckWindow implements ToolWindowFactory {
         versionCheckButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                versionCheckViewModel.init(inputArea.getText());
-                if (versionCheckViewModel.getLibraries().size() == 0) {
-                    resultArea.setText(ERROR_MESSAGE_NO_LIBRARY);
-                    return;
-                }
-
                 versionCheckViewModel
-                        .getLatestVersions()
+                        .getLibraries(inputArea.getText())
                         .subscribeOn(Schedulers.io())
                         .observeOn(SwingScheduler.getInstance())
-                        .subscribe(new Action1<LibraryModel.GetLatestLibrariesResult>() {
+                        .subscribe(new Action1<java.util.List<Library>>() {
                             @Override
-                            public void call(LibraryModel.GetLatestLibrariesResult getLatestLibrariesResult) {
-                                if (getLatestLibrariesResult.getLatestLibraries() == null) {
-                                    resultArea.setText(getLatestLibrariesResult.getProgress());
-                                    return;
-                                }
-
-                                resultArea.setText(createResult(getLatestLibrariesResult.getUsingLibraries(), getLatestLibrariesResult.getLatestLibraries()));
+                            public void call(List<Library> libraries) {
+                                resultArea.setText(createResult(libraries));
 
                                 Notifications.Bus.notify(new Notification("versionCheckFinish", "Dependencies Version Checker", "Version check finished.", NotificationType.INFORMATION));
+                            }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                if (throwable instanceof IOException) {
+                                    Notifications.Bus.notify(new Notification("versionCheckError", "Dependencies Version Checker", "I/O Error.", NotificationType.ERROR));
+                                } else if (throwable instanceof GradleConnectionException) {
+                                    Notifications.Bus.notify(new Notification("versionCheckError", "Dependencies Version Checker", "Error occurred when processing inputted script by gradle.", NotificationType.ERROR));
+                                }
+
                             }
                         });
             }
@@ -107,37 +114,22 @@ public class VersionCheckWindow implements ToolWindowFactory {
         });
     }
 
-    private String createResult(List<Library> usingLibraries, List<Library> latestLibraries) {
+    private String createResult(List<Library> libraries) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<table>")
                 .append("<tr><th align=\"left\">Library</th><th align=\"left\">Using version</th><th align=\"left\">Latest version</th></tr>");
-        for (int i = 0; i < usingLibraries.size(); i++) {
-            Library usingLibrary = usingLibraries.get(i);
 
-            String extractedLibrary;
-            if (TextUtils.isEmpty(usingLibrary.getMetaDataUrl())) {
-                extractedLibrary = usingLibrary.getGroupId() + ":" + usingLibrary.getArtifactId();
-            } else {
-                extractedLibrary =
-                        "<a href=\"" + usingLibrary.getMetaDataUrl() + "\">"
-                                + usingLibrary.getGroupId() + ":" + usingLibrary.getArtifactId() + "</a>";
-            }
-
+        for (Library library : libraries) {
+            String title = library.getGroupId() + ":" + library.getArtifactId();
             stringBuilder
                     .append("<tr>")
-                    .append("<td>").append(extractedLibrary).append("</td>")
-                    .append("<td>").append(usingLibrary.getVersion()).append("</td>")
-                    .append("<td>").append(latestLibraries.get(i).getVersion()).append("</td>")
+                    .append("<td>").append(title).append("</td>")
+                    .append("<td>").append(library.getCurrentVersion()).append("</td>")
+                    .append("<td>").append(library.getLatestVersion()).append("</td>")
                     .append("</tr>");
         }
+
         stringBuilder.append("</table>");
         return stringBuilder.toString();
-    }
-
-    @Override
-    public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(toowWindowContent, "", false);
-        toolWindow.getContentManager().addContent(content);
     }
 }

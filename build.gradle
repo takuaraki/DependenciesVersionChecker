@@ -20,6 +20,8 @@ repositories {
 }
 
 dependencies {
+    compile gradleApi()
     compile 'io.reactivex:rxjava:1.1.0'
     compile 'io.reactivex:rxswing:0.24.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.1-1'
 }

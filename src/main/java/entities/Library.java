@@ -1,26 +1,51 @@
 package entities;
 
+import dtos.Dependency;
+
 /**
- * Library available from maven repository.
+ * Library declared in build.gradle
  */
 public class Library {
-    String groupId;
-    String artifactId;
-    String version;
-    String metaDataUrl;
-
-    public Library(String groupId, String artifactId, String version) {
-        this.groupId = groupId;
-        this.artifactId = artifactId;
-        this.version = version;
-        metaDataUrl = null;
+    public enum Status {
+        CURRENT,
+        EXCEED,
+        OUTDATED,
+        UNRESOLVED;
     }
 
-    public Library(Library library) {
-        this.groupId = library.groupId;
-        this.artifactId = library.artifactId;
-        this.version = library.version;
-        this.metaDataUrl = library.metaDataUrl;
+    String groupId;
+    String artifactId;
+    String currentVersion;
+    String latestVersion;
+
+    Status status;
+
+    private Library() {
+    }
+
+    public static Library create(Dependency dependency, Status status) {
+        Library library = new Library();
+        library.groupId = dependency.group;
+        library.artifactId = dependency.name;
+        library.currentVersion = dependency.version;
+        library.status = status;
+
+        switch (status) {
+            case CURRENT:
+                library.latestVersion = dependency.version;
+                break;
+            case EXCEED:
+                library.latestVersion = dependency.latest;
+                break;
+            case OUTDATED:
+                library.latestVersion = dependency.available.milestone;
+                break;
+            case UNRESOLVED:
+                library.latestVersion = "";
+                break;
+        }
+
+        return library;
     }
 
     public String getGroupId() {
@@ -31,23 +56,15 @@ public class Library {
         return artifactId;
     }
 
-    public String getVersion() {
-        return version;
+    public String getCurrentVersion() {
+        return currentVersion;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
+    public String getLatestVersion() {
+        return latestVersion;
     }
 
-    public String getMetaDataUrl() {
-        return metaDataUrl;
-    }
-
-    public void setMetaDataUrl(String repositoryUrl) {
-        this.metaDataUrl = repositoryUrl + getMetaDataPath();
-    }
-
-    public String getMetaDataPath() {
-        return groupId.replace(".", "/") + "/" + artifactId + "/maven-metadata.xml";
+    public Status getStatus() {
+        return status;
     }
 }
