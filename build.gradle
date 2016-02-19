@@ -1,11 +1,12 @@
 plugins {
-    id "org.jetbrains.intellij" version "0.0.20"
+    id "org.jetbrains.intellij" version "0.0.35"
 }
 
 group 'io.github.takuaraki'
-version '1.2'
+version '1.3'
 
 apply plugin: 'java'
+sourceCompatibility = '1.6'
 
 apply plugin: 'org.jetbrains.intellij'
 intellij {
@@ -19,6 +20,8 @@ repositories {
 }
 
 dependencies {
+    compile gradleApi()
     compile 'io.reactivex:rxjava:1.1.0'
     compile 'io.reactivex:rxswing:0.24.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.1-1'
 }
