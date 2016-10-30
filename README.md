@@ -1,3 +1,6 @@
+# DEPRECATED
+Dependencies Version Checker is no more maintained.
+
 # Dependencies Version Checker
 ## What's this?
 Dependencies Version Checker is an Intellij Plugin.
